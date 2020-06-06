@@ -46,7 +46,12 @@ void mode_6(void);
 void fade_up(int pin);
 void fade_down(int pin);
 void fade_up_down(int up_pin, int down_pin);
-void udelay(unsigned us);
+void udelay(unsigned long us);
+
+static inline void mdelay(unsigned long ms)
+{
+	udelay(ms*1000);
+}
 
 bool mode_change(void);
 
@@ -75,7 +80,7 @@ void setup(void)
 	for (;;)
 	{
 		all_off();
-		delay(1000);
+		mdelay(1000);
 		mode = newmode;
 		switch (mode)
 		{
@@ -138,15 +143,15 @@ void mode_1(void)
 	for (;;)
 	{
 		digitalWrite(LED_1, HIGH);
-		delay(1000);
+		mdelay(1000);
 		MODECHECK();
 		digitalWrite(LED_1, LOW);
 		digitalWrite(LED_2, HIGH);
-		delay(1000);
+		mdelay(1000);
 		MODECHECK();
 		digitalWrite(LED_2, LOW);
 		digitalWrite(LED_3, HIGH);
-		delay(1000);
+		mdelay(1000);
 		MODECHECK();
 		digitalWrite(LED_3, LOW);
 	}
@@ -158,28 +163,28 @@ void mode_2(void)
 {
 	for (;;)
 	{
-		delay(1000);
+		mdelay(1000);
 		MODECHECK();
 		digitalWrite(LED_1, HIGH);
-		delay(1000);
+		mdelay(1000);
 		MODECHECK();
 		digitalWrite(LED_2, HIGH);
-		delay(1000);
+		mdelay(1000);
 		MODECHECK();
 		digitalWrite(LED_1, LOW);
-		delay(1000);
+		mdelay(1000);
 		MODECHECK();
 		digitalWrite(LED_3, HIGH);
-		delay(1000);
+		mdelay(1000);
 		MODECHECK();
 		digitalWrite(LED_1, HIGH);
-		delay(1000);
+		mdelay(1000);
 		MODECHECK();
 		digitalWrite(LED_2, LOW);
-		delay(1000);
+		mdelay(1000);
 		MODECHECK();
 		digitalWrite(LED_1, LOW);
-		delay(1000);
+		mdelay(1000);
 		MODECHECK();
 		digitalWrite(LED_3, LOW);
 	}
@@ -191,28 +196,28 @@ void mode_3(void)
 {
 	for (;;)
 	{
-		delay(1000);
+		mdelay(1000);
 		fade_up(LED_1);
 		MODECHECK();
-		delay(1000);
+		mdelay(1000);
 		fade_up(LED_2);
 		MODECHECK();
-		delay(1000);
+		mdelay(1000);
 		fade_down(LED_1);
 		MODECHECK();
-		delay(1000);
+		mdelay(1000);
 		fade_up(LED_3);
 		MODECHECK();
-		delay(1000);
+		mdelay(1000);
 		fade_up(LED_1);
 		MODECHECK();
-		delay(1000);
+		mdelay(1000);
 		fade_down(LED_2);
 		MODECHECK();
-		delay(1000);
+		mdelay(1000);
 		fade_down(LED_1);
 		MODECHECK();
-		delay(1000);
+		mdelay(1000);
 		fade_down(LED_3);
 		MODECHECK();
 	}
@@ -225,13 +230,13 @@ void mode_4(void)
 	fade_up(LED_1);		/* Initial condition */
 	for (;;)
 	{
-		delay(1000);
+		mdelay(1000);
 		fade_up_down(LED_2, LED_1);
 		MODECHECK();
-		delay(1000);
+		mdelay(1000);
 		fade_up_down(LED_3, LED_2);
 		MODECHECK();
-		delay(1000);
+		mdelay(1000);
 		fade_up_down(LED_1, LED_3);
 		MODECHECK();
 	}
@@ -280,8 +285,12 @@ void fade_up(int pin)
 			udelay(10000 - i);
 			MODECHECK();
 		}
+		MODECHECK();
 	}
-	digitalWrite(pin, HIGH);
+	if ( mode == newmode )
+	{
+		digitalWrite(pin, HIGH);
+	}
 }
 
 void fade_down(int pin)
@@ -297,8 +306,12 @@ void fade_down(int pin)
 			udelay(10000 - i);
 			MODECHECK();
 		}
+		MODECHECK();
 	}
-	digitalWrite(pin, LOW);
+	if ( mode == newmode )
+	{
+		digitalWrite(pin, LOW);
+	}
 }
 
 void fade_up_down(int up_pin, int down_pin)
@@ -316,18 +329,22 @@ void fade_up_down(int up_pin, int down_pin)
 			udelay(10000 - i);
 			MODECHECK();
 		}
+		MODECHECK();
 	}
-	digitalWrite(up_pin, HIGH);
-	digitalWrite(down_pin, LOW);
+	if ( mode == newmode )
+	{
+		digitalWrite(up_pin, HIGH);
+		digitalWrite(down_pin, LOW);
+	}
 }
 
-void udelay(unsigned us)
+void udelay(unsigned long us)
 {
 	unsigned long start = micros();
 
 	while ( (micros() - start) < us )	/* Overflow/underflow doesn't matter */
 	{
-		/* Twiddle thumbs */
+		MODECHECK();
 	}
 }
 
