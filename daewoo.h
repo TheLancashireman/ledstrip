@@ -62,4 +62,21 @@
 
 #define IR_REPEAT	0xFFFFFFFF
 
+/* Mappings to ledstrip controls
+*/
+#define BTN_OFF		IR_OFF
+#define BTN_M1		IR_1
+#define BTN_M2		IR_2
+#define BTN_M3		IR_3
+#define BTN_M4		IR_4
+#define BTN_M5		IR_5
+#define BTN_M6		IR_6
+#define BTN_M7		IR_7
+#define BTN_M8		IR_8
+#define BTN_M9		IR_9
+#define BTN_M10		IR_0
+
+#define BTN_FASTER	IR_INDEXu
+#define BTN_SLOWER	IR_INDEXd
+
 #endif

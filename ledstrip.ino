@@ -30,7 +30,7 @@
 #define LED_3	4
 #define IR_PIN	7
 
-char mode =	99;
+char mode =	1;
 char speed = 10;	/* Range 0..19, controlled by INDEX+ and INDEX- buttons */
 
 IRrecv irrecv(IR_PIN);
@@ -40,14 +40,17 @@ jmp_buf jb;
 void all_off(void);
 void all_on(void);
 
-void mode_on(void);
-void mode_off(void);
+void mode_0(void);
 void mode_1(void);
 void mode_2(void);
 void mode_3(void);
 void mode_4(void);
 void mode_5(void);
 void mode_6(void);
+void mode_7(void);
+void mode_8(void);
+void mode_9(void);
+void mode_a(void);
 
 void fade_up(int pin);
 void fade_down(int pin);
@@ -91,14 +94,18 @@ void setup(void)
 
 		switch (mode)
 		{
-		case 0:		mode_off();	break;
+		case 0:		mode_0();	break;
 		case 1:		mode_1();	break;
 		case 2:		mode_2();	break;
 		case 3:		mode_3();	break;
 		case 4:		mode_4();	break;
 		case 5:		mode_5();	break;
 		case 6:		mode_6();	break;
-		default:	mode_on();	break;
+		case 7:		mode_7();	break;
+		case 8:		mode_8();	break;
+		case 9:		mode_9();	break;
+		case 10:	mode_a();	break;
+		default:	mode_1();	break;		/* Default to ON */
 		}
 	}
 }
@@ -121,9 +128,9 @@ void all_on(void)
 	digitalWrite(LED_3, HIGH);
 }
 
-/* mode_off() - turn all colours off
+/* mode_0() - turn all colours off
 */
-void mode_off(void)
+void mode_0(void)
 {
 	all_off();
 	for (;;)
@@ -132,9 +139,9 @@ void mode_off(void)
 	}
 }
 
-/* mode_on() - turn all colours on
+/* mode_1() - turn all colours on
 */
-void mode_on(void)
+void mode_1(void)
 {
 	all_on();
 	for (;;)
@@ -143,30 +150,30 @@ void mode_on(void)
 	}
 }
 
-/* mode_1() - switch individual colours on and off
-*/
-void mode_1(void)
-{
-	for (;;)
-	{
-		digitalWrite(LED_1, HIGH);
-		mdelay(1000);
-		digitalWrite(LED_1, LOW);
-		digitalWrite(LED_2, HIGH);
-		mdelay(1000);
-		digitalWrite(LED_2, LOW);
-		digitalWrite(LED_3, HIGH);
-		mdelay(1000);
-		digitalWrite(LED_3, LOW);
-	}
-}
-
-/* mode_2() - cycle through all on/off states (Gray code)
+/* mode_2() - switch individual colours on and off
 */
 void mode_2(void)
 {
 	for (;;)
 	{
+		digitalWrite(LED_1, HIGH);
+		mdelay(1000);
+		digitalWrite(LED_1, LOW);
+		digitalWrite(LED_2, HIGH);
+		mdelay(1000);
+		digitalWrite(LED_2, LOW);
+		digitalWrite(LED_3, HIGH);
+		mdelay(1000);
+		digitalWrite(LED_3, LOW);
+	}
+}
+
+/* mode_3() - cycle through all on/off states (Gray code)
+*/
+void mode_3(void)
+{
+	for (;;)
+	{
 		mdelay(1000);
 		digitalWrite(LED_1, HIGH);
 		mdelay(1000);
@@ -186,9 +193,9 @@ void mode_2(void)
 	}
 }
 
-/* mode_3() - cycle through all on/off states with gradual change (Gray code)
+/* mode_4() - cycle through all on/off states with gradual change (Gray code)
 */
-void mode_3(void)
+void mode_4(void)
 {
 	for (;;)
 	{
@@ -211,9 +218,9 @@ void mode_3(void)
 	}
 }
 
-/* mode_4() - ramp colour intensity up and down simultaneously.
+/* mode_5() - ramp colour intensity up and down simultaneously.
 */
-void mode_4(void)
+void mode_5(void)
 {
 	fade_up(LED_1);		/* Initial condition */
 	for (;;)
@@ -227,27 +234,39 @@ void mode_4(void)
 	}
 }
 
-/* mode_5() - placeholder
-*/
-void mode_5(void)
-{
-	mode_on();
-}
-
 /* mode_6() - placeholder
 */
 void mode_6(void)
 {
-	mode_on();
+	mode_1();
 }
 
-/* mode_x() - template
+/* mode_7() - placeholder
 */
-void mode_x(void)
+void mode_7(void)
 {
-	for (;;)
-	{
-	}
+	mode_1();
+}
+
+/* mode_8() - placeholder
+*/
+void mode_8(void)
+{
+	mode_1();
+}
+
+/* mode_9() - placeholder
+*/
+void mode_9(void)
+{
+	mode_1();
+}
+
+/* mode_a() - placeholder
+*/
+void mode_a(void)
+{
+	mode_1();
 }
 
 /* loop() - standard Arduino "Background Task"
@@ -328,21 +347,20 @@ void mode_check(void)
 	{
 		switch ( results.value )
 		{
-		case IR_OFF:	newmode = 0;	break;
-		case IR_1:		newmode = 1;	break;
-		case IR_2:		newmode = 2;	break;
-		case IR_3:		newmode = 3;	break;
-		case IR_4:		newmode = 4;	break;
-		case IR_5:		newmode = 5;	break;
-		case IR_6:		newmode = 6;	break;
-		case IR_7:		newmode = 7;	break;
-		case IR_8:		newmode = 8;	break;
-		case IR_9:		newmode = 9;	break;
-		case IR_0:		newmode = 10;	break;
-		case IR_PROG:	newmode = 99;	break;
+		case BTN_OFF:		newmode = 0;	break;
+		case BTN_M1:		newmode = 1;	break;
+		case BTN_M2:		newmode = 2;	break;
+		case BTN_M3:		newmode = 3;	break;
+		case BTN_M4:		newmode = 4;	break;
+		case BTN_M5:		newmode = 5;	break;
+		case BTN_M6:		newmode = 6;	break;
+		case BTN_M7:		newmode = 7;	break;
+		case BTN_M8:		newmode = 8;	break;
+		case BTN_M9:		newmode = 9;	break;
+		case BTN_M10:		newmode = 10;	break;
 
-		case IR_INDEXd:	if ( speed > 0 )	speed--;	break;
-		case IR_INDEXu:	if ( speed < 19 )	speed++;	break;
+		case BTN_SLOWER:	if ( speed > 0 )	speed--;	break;
+		case BTN_FASTER:	if ( speed < 19 )	speed++;	break;
 
 		default:						break;	/* No change */
 		}
@@ -362,5 +380,3 @@ void mode_check(void)
 #endif
 	}
 }
-#define IR_INDEXd	0x3451C218
-#define IR_INDEXu	0x8EC21146
