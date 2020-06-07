@@ -57,12 +57,18 @@ void fade_down(int pin);
 void fade_up_down(int up_pin, int down_pin);
 void udelay(unsigned long us);
 
+void mode_check(void);
+
+/* mdelay() - a variable delay - the delay depends on the current speed
+ *
+ * Higher speed ==> shorter delay
+ *
+ * The arduino delay() function is not used because of the need to monitor the remote control receiver.
+*/
 static inline void mdelay(unsigned long ms)
 {
 	udelay(ms*100*(20-speed));
 }
-
-void mode_check(void);
 
 /* setup() - standard Arduino "Init Task"
 */
@@ -128,7 +134,7 @@ void all_on(void)
 	digitalWrite(LED_3, HIGH);
 }
 
-/* mode_0() - turn all colours off
+/* mode_0() - all colours off
 */
 void mode_0(void)
 {
@@ -139,7 +145,7 @@ void mode_0(void)
 	}
 }
 
-/* mode_1() - turn all colours on
+/* mode_1() - all colours on
 */
 void mode_1(void)
 {
@@ -150,7 +156,7 @@ void mode_1(void)
 	}
 }
 
-/* mode_2() - switch individual colours on and off
+/* mode_2() - switch individual colours on and off in a cycle
 */
 void mode_2(void)
 {
@@ -168,7 +174,7 @@ void mode_2(void)
 	}
 }
 
-/* mode_3() - cycle through all on/off states (Gray code)
+/* mode_3() - cycle through all eight on/off states (Gray code)
 */
 void mode_3(void)
 {
@@ -193,7 +199,7 @@ void mode_3(void)
 	}
 }
 
-/* mode_4() - cycle through all on/off states with gradual change (Gray code)
+/* mode_4() - cycle through all eight on/off states with gradual change (Gray code)
 */
 void mode_4(void)
 {
