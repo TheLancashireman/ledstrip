@@ -31,7 +31,7 @@
 #define IR_PIN	7
 
 char mode =	99;
-char newmode = 99;
+char speed = 10;	/* Range 0..19, controlled by INDEX+ and INDEX- buttons */
 
 IRrecv irrecv(IR_PIN);
 
@@ -56,7 +56,7 @@ void udelay(unsigned long us);
 
 static inline void mdelay(unsigned long ms)
 {
-	udelay(ms*1000);
+	udelay(ms*100*(20-speed));
 }
 
 void mode_check(void);
@@ -83,7 +83,6 @@ void setup(void)
 	{
 		setjmp(jb);
 		all_off();
-		mode = newmode;
 
 #if DBG
 		Serial.print("Mode ");
@@ -212,7 +211,7 @@ void mode_3(void)
 	}
 }
 
-/* mode_4() - ramp colour intensity up and down simultaneously. Approx 10 secs for each fade
+/* mode_4() - ramp colour intensity up and down simultaneously.
 */
 void mode_4(void)
 {
@@ -262,7 +261,7 @@ void fade_up(int pin)
 {
 	for (unsigned i = 100; i < 10000; i += 100 )
 	{
-		for ( int j = 0; j < 10; j++ )
+		for ( int j = 0; j < (20-speed); j++ )
 		{
 			digitalWrite(pin, HIGH);
 			udelay(i);
@@ -270,17 +269,14 @@ void fade_up(int pin)
 			udelay(10000 - i);
 		}
 	}
-	if ( mode == newmode )
-	{
-		digitalWrite(pin, HIGH);
-	}
+	digitalWrite(pin, HIGH);
 }
 
 void fade_down(int pin)
 {
 	for (unsigned i = 100; i < 10000; i += 100 )
 	{
-		for ( int j = 0; j < 10; j++ )
+		for ( int j = 0; j < (20-speed); j++ )
 		{
 			digitalWrite(pin, LOW);
 			udelay(i);
@@ -288,17 +284,14 @@ void fade_down(int pin)
 			udelay(10000 - i);
 		}
 	}
-	if ( mode == newmode )
-	{
-		digitalWrite(pin, LOW);
-	}
+	digitalWrite(pin, LOW);
 }
 
 void fade_up_down(int up_pin, int down_pin)
 {
 	for (unsigned i = 100; i < 10000; i += 100 )
 	{
-		for ( int j = 0; j < 10; j++ )
+		for ( int j = 0; j < (20-speed); j++ )
 		{
 			digitalWrite(up_pin, HIGH);
 			digitalWrite(down_pin, LOW);
@@ -308,11 +301,8 @@ void fade_up_down(int up_pin, int down_pin)
 			udelay(10000 - i);
 		}
 	}
-	if ( mode == newmode )
-	{
-		digitalWrite(up_pin, HIGH);
-		digitalWrite(down_pin, LOW);
-	}
+	digitalWrite(up_pin, HIGH);
+	digitalWrite(down_pin, LOW);
 }
 
 void udelay(unsigned long us)
@@ -332,6 +322,7 @@ void udelay(unsigned long us)
 void mode_check(void)
 {
 	decode_results results;
+	char newmode = mode;
 
 	while ( irrecv.decode(&results) )
 	{
@@ -344,7 +335,15 @@ void mode_check(void)
 		case IR_4:		newmode = 4;	break;
 		case IR_5:		newmode = 5;	break;
 		case IR_6:		newmode = 6;	break;
+		case IR_7:		newmode = 7;	break;
+		case IR_8:		newmode = 8;	break;
+		case IR_9:		newmode = 9;	break;
+		case IR_0:		newmode = 10;	break;
 		case IR_PROG:	newmode = 99;	break;
+
+		case IR_INDEXd:	if ( speed > 0 )	speed--;	break;
+		case IR_INDEXu:	if ( speed < 19 )	speed++;	break;
+
 		default:						break;	/* No change */
 		}
 		irrecv.resume();
@@ -356,9 +355,12 @@ void mode_check(void)
 		Serial.print("mode_check(): mode ");
 		Serial.println(newmode, DEC);
 #endif
+		mode = newmode;
 		longjmp(jb, 42);
 #if DBG
 		Serial.println("Oops! longjmp() returned");
 #endif
 	}
 }
+#define IR_INDEXd	0x3451C218
+#define IR_INDEXu	0x8EC21146
