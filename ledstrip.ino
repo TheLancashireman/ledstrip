@@ -19,6 +19,9 @@
 */
 #include <IRremote.h>
 #include "daewoo.h"
+#include <setjmp.h>
+
+#define DBG	0
 
 /* Pin numbers
 */
@@ -29,7 +32,10 @@
 
 char mode =	99;
 char newmode = 99;
+
 IRrecv irrecv(IR_PIN);
+
+jmp_buf jb;
 
 void all_off(void);
 void all_on(void);
@@ -53,15 +59,7 @@ static inline void mdelay(unsigned long ms)
 	udelay(ms*1000);
 }
 
-bool mode_change(void);
-
-/* MODECHECK() - check for mode change.
- *
- * Using break in a macro is evil, but in Arduino-land there's no setjmp/longjmp and no C++ exception
- *
- * IMPORANT: no semicolon after break.
-*/
-#define MODECHECK()	if ( mode_change() ) break
+void mode_check(void);
 
 /* setup() - standard Arduino "Init Task"
 */
@@ -77,11 +75,21 @@ void setup(void)
 	irrecv.enableIRIn();
 	irrecv.blink13(true);
 
+#if DBG
+	Serial.begin(115200);
+#endif
+
 	for (;;)
 	{
+		setjmp(jb);
 		all_off();
-		mdelay(1000);
 		mode = newmode;
+
+#if DBG
+		Serial.print("Mode ");
+		Serial.println(mode, DEC);
+#endif
+
 		switch (mode)
 		{
 		case 0:		mode_off();	break;
@@ -121,7 +129,7 @@ void mode_off(void)
 	all_off();
 	for (;;)
 	{
-		MODECHECK();
+		mode_check();
 	}
 }
 
@@ -132,7 +140,7 @@ void mode_on(void)
 	all_on();
 	for (;;)
 	{
-		MODECHECK();
+		mode_check();
 	}
 }
 
@@ -144,15 +152,12 @@ void mode_1(void)
 	{
 		digitalWrite(LED_1, HIGH);
 		mdelay(1000);
-		MODECHECK();
 		digitalWrite(LED_1, LOW);
 		digitalWrite(LED_2, HIGH);
 		mdelay(1000);
-		MODECHECK();
 		digitalWrite(LED_2, LOW);
 		digitalWrite(LED_3, HIGH);
 		mdelay(1000);
-		MODECHECK();
 		digitalWrite(LED_3, LOW);
 	}
 }
@@ -164,28 +169,20 @@ void mode_2(void)
 	for (;;)
 	{
 		mdelay(1000);
-		MODECHECK();
 		digitalWrite(LED_1, HIGH);
 		mdelay(1000);
-		MODECHECK();
 		digitalWrite(LED_2, HIGH);
 		mdelay(1000);
-		MODECHECK();
 		digitalWrite(LED_1, LOW);
 		mdelay(1000);
-		MODECHECK();
 		digitalWrite(LED_3, HIGH);
 		mdelay(1000);
-		MODECHECK();
 		digitalWrite(LED_1, HIGH);
 		mdelay(1000);
-		MODECHECK();
 		digitalWrite(LED_2, LOW);
 		mdelay(1000);
-		MODECHECK();
 		digitalWrite(LED_1, LOW);
 		mdelay(1000);
-		MODECHECK();
 		digitalWrite(LED_3, LOW);
 	}
 }
@@ -198,28 +195,20 @@ void mode_3(void)
 	{
 		mdelay(1000);
 		fade_up(LED_1);
-		MODECHECK();
 		mdelay(1000);
 		fade_up(LED_2);
-		MODECHECK();
 		mdelay(1000);
 		fade_down(LED_1);
-		MODECHECK();
 		mdelay(1000);
 		fade_up(LED_3);
-		MODECHECK();
 		mdelay(1000);
 		fade_up(LED_1);
-		MODECHECK();
 		mdelay(1000);
 		fade_down(LED_2);
-		MODECHECK();
 		mdelay(1000);
 		fade_down(LED_1);
-		MODECHECK();
 		mdelay(1000);
 		fade_down(LED_3);
-		MODECHECK();
 	}
 }
 
@@ -232,13 +221,10 @@ void mode_4(void)
 	{
 		mdelay(1000);
 		fade_up_down(LED_2, LED_1);
-		MODECHECK();
 		mdelay(1000);
 		fade_up_down(LED_3, LED_2);
-		MODECHECK();
 		mdelay(1000);
 		fade_up_down(LED_1, LED_3);
-		MODECHECK();
 	}
 }
 
@@ -280,12 +266,9 @@ void fade_up(int pin)
 		{
 			digitalWrite(pin, HIGH);
 			udelay(i);
-			MODECHECK();
 			digitalWrite(pin, LOW);
 			udelay(10000 - i);
-			MODECHECK();
 		}
-		MODECHECK();
 	}
 	if ( mode == newmode )
 	{
@@ -301,12 +284,9 @@ void fade_down(int pin)
 		{
 			digitalWrite(pin, LOW);
 			udelay(i);
-			MODECHECK();
 			digitalWrite(pin, HIGH);
 			udelay(10000 - i);
-			MODECHECK();
 		}
-		MODECHECK();
 	}
 	if ( mode == newmode )
 	{
@@ -323,13 +303,10 @@ void fade_up_down(int up_pin, int down_pin)
 			digitalWrite(up_pin, HIGH);
 			digitalWrite(down_pin, LOW);
 			udelay(i);
-			MODECHECK();
 			digitalWrite(up_pin, LOW);
 			digitalWrite(down_pin, HIGH);
 			udelay(10000 - i);
-			MODECHECK();
 		}
-		MODECHECK();
 	}
 	if ( mode == newmode )
 	{
@@ -342,17 +319,17 @@ void udelay(unsigned long us)
 {
 	unsigned long start = micros();
 
-	while ( (micros() - start) < us )	/* Overflow/underflow doesn't matter */
+	do
 	{
-		MODECHECK();
-	}
+		mode_check();
+	} while ( (micros() - start) < us );	/* Overflow/underflow doesn't matter */
 }
 
-/* mode_change() - check for a mode change
+/* mode_check() - check for a mode change
  *
- * If there has been a mode change, return true
+ * If there has been a mode change, longjmp back to the main loop
 */
-bool mode_change(void)
+void mode_check(void)
 {
 	decode_results results;
 
@@ -373,5 +350,15 @@ bool mode_change(void)
 		irrecv.resume();
 	}
 
-	return ( mode != newmode );
+	if ( mode != newmode )
+	{
+#if DBG
+		Serial.print("mode_check(): mode ");
+		Serial.println(newmode, DEC);
+#endif
+		longjmp(jb, 42);
+#if DBG
+		Serial.println("Oops! longjmp() returned");
+#endif
+	}
 }
