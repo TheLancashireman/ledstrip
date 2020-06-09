@@ -277,13 +277,17 @@ void mode_a(void)
 	mode_1();
 }
 
-/* loop() - standard Arduino "Background Task"
+/* loop() - standard Arduino "Background Task" ... not used
 */
 void loop(void)
 {
 	/* Nothing to see here */
 }
 
+/* fade_up() - gradually increase the intensity of a single LED
+ *
+ * The outer loop ramps up the intensity. The inner loop creates the PWM with a period of 10 ms.
+*/
 void fade_up(int pin)
 {
 	for (unsigned i = 100; i < 10000; i += 100 )
@@ -299,6 +303,10 @@ void fade_up(int pin)
 	digitalWrite(pin, HIGH);
 }
 
+/* fade_down() - gradually decrease the intensity of a single LED
+ *
+ * The outer loop ramps down the intensity. The inner loop creates the PWM with a period of 10 ms.
+*/
 void fade_down(int pin)
 {
 	for (unsigned i = 100; i < 10000; i += 100 )
@@ -314,6 +322,11 @@ void fade_down(int pin)
 	digitalWrite(pin, LOW);
 }
 
+/* fade_down() - gradually change the intensity of two LEDs - one up, one down.
+ *
+ * The outer loop controls the intensity. The inner loop creates the PWM with a period of 10 ms with
+ * the two LEDs working in opposite directions.
+*/
 void fade_up_down(int up_pin, int down_pin)
 {
 	for (unsigned i = 100; i < 10000; i += 100 )
@@ -332,6 +345,10 @@ void fade_up_down(int up_pin, int down_pin)
 	digitalWrite(down_pin, LOW);
 }
 
+/* udelay() - delay by the specified number of microseconds
+ *
+ * While the delay is in progress, the IR receiver is monitored.
+*/
 void udelay(unsigned long us)
 {
 	unsigned long start = micros();
@@ -344,7 +361,8 @@ void udelay(unsigned long us)
 
 /* mode_check() - check for a mode change
  *
- * If there has been a mode change, longjmp back to the main loop
+ * If there has been a mode change, longjmp back to the main loop.
+ * Speed and intensity changes just modify the control variables.
 */
 void mode_check(void)
 {
