@@ -16,7 +16,8 @@ The arduino is controlled by means of an infra-red remote control handset.
 
 Each output pin is connected to the base of an NPN transistor via a 10k resistor. The collector of each
 transistor is connected to one of the R, G and B pins of the LED strip and the emitters are connected
-to 0v.
+to 0v. I used BC548 transistors, but just about any NPN transistor will work. Watch out for maximum
+current ratings though.
 
 You need a two-rail PSU; 12v for the LEDs and 5v for the arduino. You could derive the arduino power
 from the 12v supply with a suitable regulator (e.g. 7805).
@@ -26,10 +27,11 @@ from the 12v supply with a suitable regulator (e.g. 7805).
 I used a Sharp GP1UV70QS IR sensor. It has three pins: 5v, 0v and output. The output is connected directly
 to an arduino pin.
 
-I used a handset that belonged to a long-dead Daewoo VCR.
+I used a handset that belonged to a long-dead Daewoo VCR. The header file daewoo.h defines the keycodes
+and maps them to ledstrip functions.
 
-You can use any old handset, but you will have to determine the coding of the keys and map them to suitable
-mode controls.
+You can use any old handset, but you will have to determine the coding of the keys and map them to the
+mode controls in the ledstrip program. You can create and use your own handset mapping file.
 
 You can find more information at https://www.circuitbasics.com/arduino-ir-remote-receiver-tutorial/
 
