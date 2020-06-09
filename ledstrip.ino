@@ -40,17 +40,17 @@ jmp_buf jb;
 void all_off(void);
 void all_on(void);
 
-void mode_0(void);
-void mode_1(void);
-void mode_2(void);
-void mode_3(void);
-void mode_4(void);
-void mode_5(void);
-void mode_6(void);
-void mode_7(void);
-void mode_8(void);
-void mode_9(void);
-void mode_a(void);
+void mode_0(void);	/* All LEDs off */
+void mode_1(void);	/* All LEDs on (white light, or as near as we can get) */
+void mode_2(void);	/* Three-colour cycle (exactly one colour on at any time) */
+void mode_3(void);	/* Eight-colour cycle (all possible combinations of one, two and three colours) */
+void mode_4(void);	/* Eight-colour cycle (like mode_3) but with a gradual change */
+void mode_5(void);	/* Three-colour cycle with a gradual change; while one colour decreases another increases. */
+void mode_6(void);	/* To be defined */
+void mode_7(void);	/* To be defined */
+void mode_8(void);	/* To be defined */
+void mode_9(void);	/* To be defined */
+void mode_a(void);	/* To be defined */
 
 void fade_up(int pin);
 void fade_down(int pin);
@@ -63,7 +63,7 @@ void mode_check(void);
  *
  * Higher speed ==> shorter delay
  *
- * The nominal delay (for speed = 10) is in milliseconds.
+ * The nominal delay for speed 10 is in milliseconds.
  *
  * The arduino delay() function is not used because of the need to monitor the remote control receiver.
 */
@@ -73,6 +73,8 @@ static inline void vdelay(unsigned long ms)
 }
 
 /* setup() - standard Arduino "Init Task"
+ *
+ * Everything happens here.
 */
 void setup(void)
 {
