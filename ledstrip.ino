@@ -59,13 +59,15 @@ void udelay(unsigned long us);
 
 void mode_check(void);
 
-/* mdelay() - a variable delay - the delay depends on the current speed
+/* vdelay() - a variable delay - the delay depends on the current speed
  *
  * Higher speed ==> shorter delay
  *
+ * The nominal delay (for speed = 10) is in milliseconds.
+ *
  * The arduino delay() function is not used because of the need to monitor the remote control receiver.
 */
-static inline void mdelay(unsigned long ms)
+static inline void vdelay(unsigned long ms)
 {
 	udelay(ms*100*(20-speed));
 }
@@ -134,7 +136,7 @@ void all_on(void)
 	digitalWrite(LED_3, HIGH);
 }
 
-/* mode_0() - all colours off
+/* mode_0() - turn all colours off, then wait for a mode change
 */
 void mode_0(void)
 {
@@ -145,7 +147,7 @@ void mode_0(void)
 	}
 }
 
-/* mode_1() - all colours on
+/* mode_1() - turn all colours on, then wait for a mode change
 */
 void mode_1(void)
 {
@@ -156,20 +158,20 @@ void mode_1(void)
 	}
 }
 
-/* mode_2() - switch individual colours on and off in a cycle
+/* mode_2() - switch the individual colours on and off in a cycle
 */
 void mode_2(void)
 {
 	for (;;)
 	{
 		digitalWrite(LED_1, HIGH);
-		mdelay(1000);
+		vdelay(1000);
 		digitalWrite(LED_1, LOW);
 		digitalWrite(LED_2, HIGH);
-		mdelay(1000);
+		vdelay(1000);
 		digitalWrite(LED_2, LOW);
 		digitalWrite(LED_3, HIGH);
-		mdelay(1000);
+		vdelay(1000);
 		digitalWrite(LED_3, LOW);
 	}
 }
@@ -180,21 +182,21 @@ void mode_3(void)
 {
 	for (;;)
 	{
-		mdelay(1000);
+		vdelay(1000);
 		digitalWrite(LED_1, HIGH);
-		mdelay(1000);
+		vdelay(1000);
 		digitalWrite(LED_2, HIGH);
-		mdelay(1000);
+		vdelay(1000);
 		digitalWrite(LED_1, LOW);
-		mdelay(1000);
+		vdelay(1000);
 		digitalWrite(LED_3, HIGH);
-		mdelay(1000);
+		vdelay(1000);
 		digitalWrite(LED_1, HIGH);
-		mdelay(1000);
+		vdelay(1000);
 		digitalWrite(LED_2, LOW);
-		mdelay(1000);
+		vdelay(1000);
 		digitalWrite(LED_1, LOW);
-		mdelay(1000);
+		vdelay(1000);
 		digitalWrite(LED_3, LOW);
 	}
 }
@@ -205,21 +207,21 @@ void mode_4(void)
 {
 	for (;;)
 	{
-		mdelay(1000);
+		vdelay(1000);
 		fade_up(LED_1);
-		mdelay(1000);
+		vdelay(1000);
 		fade_up(LED_2);
-		mdelay(1000);
+		vdelay(1000);
 		fade_down(LED_1);
-		mdelay(1000);
+		vdelay(1000);
 		fade_up(LED_3);
-		mdelay(1000);
+		vdelay(1000);
 		fade_up(LED_1);
-		mdelay(1000);
+		vdelay(1000);
 		fade_down(LED_2);
-		mdelay(1000);
+		vdelay(1000);
 		fade_down(LED_1);
-		mdelay(1000);
+		vdelay(1000);
 		fade_down(LED_3);
 	}
 }
@@ -231,11 +233,11 @@ void mode_5(void)
 	fade_up(LED_1);		/* Initial condition */
 	for (;;)
 	{
-		mdelay(1000);
+		vdelay(1000);
 		fade_up_down(LED_2, LED_1);
-		mdelay(1000);
+		vdelay(1000);
 		fade_up_down(LED_3, LED_2);
-		mdelay(1000);
+		vdelay(1000);
 		fade_up_down(LED_1, LED_3);
 	}
 }
