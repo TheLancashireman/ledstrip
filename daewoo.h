@@ -79,4 +79,11 @@
 #define BTN_FASTER	IR_INDEXu
 #define BTN_SLOWER	IR_INDEXd
 
+#define BTN_L1u		IR_SPLP
+#define BTN_L1d		IR_LEFT
+#define BTN_L2u		IR_PRu
+#define BTN_L2d		IR_OK
+#define BTN_L3u		IR_MENU
+#define BTN_L3d		IR_RIGHT
+
 #endif

@@ -25,13 +25,14 @@
 
 /* Pin numbers
 */
-#define LED_1	2
-#define LED_2	3
-#define LED_3	4
+#define LED_B	2
+#define LED_R	3
+#define LED_G	4
 #define IR_PIN	7
 
 char mode =	1;
-char speed = 10;	/* Range 0..19, controlled by INDEX+ and INDEX- buttons */
+char speed = 10;					/* Range 0..19, controlled by INDEX+ and INDEX- buttons */
+char level[3] = { 5, 5, 5 };		/* Range 0..100, controlled by ??? */
 
 IRrecv irrecv(IR_PIN);
 
@@ -78,12 +79,12 @@ static inline void vdelay(unsigned long ms)
 */
 void setup(void)
 {
-	pinMode(LED_1, OUTPUT);
-	pinMode(LED_2, OUTPUT);
-	pinMode(LED_3, OUTPUT);
-	digitalWrite(LED_1, LOW);
-	digitalWrite(LED_2, LOW);
-	digitalWrite(LED_3, LOW);
+	pinMode(LED_B, OUTPUT);
+	pinMode(LED_R, OUTPUT);
+	pinMode(LED_G, OUTPUT);
+	digitalWrite(LED_B, LOW);
+	digitalWrite(LED_R, LOW);
+	digitalWrite(LED_G, LOW);
 
 	irrecv.enableIRIn();
 	irrecv.blink13(true);
@@ -124,18 +125,18 @@ void setup(void)
 */
 void all_off(void)
 {
-	digitalWrite(LED_1, LOW);
-	digitalWrite(LED_2, LOW);
-	digitalWrite(LED_3, LOW);
+	digitalWrite(LED_B, LOW);
+	digitalWrite(LED_R, LOW);
+	digitalWrite(LED_G, LOW);
 }
 
 /* all_on() - turn all colours on
 */
 void all_on(void)
 {
-	digitalWrite(LED_1, HIGH);
-	digitalWrite(LED_2, HIGH);
-	digitalWrite(LED_3, HIGH);
+	digitalWrite(LED_B, HIGH);
+	digitalWrite(LED_R, HIGH);
+	digitalWrite(LED_G, HIGH);
 }
 
 /* mode_0() - turn all colours off, then wait for a mode change
@@ -166,15 +167,15 @@ void mode_2(void)
 {
 	for (;;)
 	{
-		digitalWrite(LED_1, HIGH);
+		digitalWrite(LED_B, HIGH);
 		vdelay(1000);
-		digitalWrite(LED_1, LOW);
-		digitalWrite(LED_2, HIGH);
+		digitalWrite(LED_B, LOW);
+		digitalWrite(LED_R, HIGH);
 		vdelay(1000);
-		digitalWrite(LED_2, LOW);
-		digitalWrite(LED_3, HIGH);
+		digitalWrite(LED_R, LOW);
+		digitalWrite(LED_G, HIGH);
 		vdelay(1000);
-		digitalWrite(LED_3, LOW);
+		digitalWrite(LED_G, LOW);
 	}
 }
 
@@ -185,21 +186,21 @@ void mode_3(void)
 	for (;;)
 	{
 		vdelay(1000);
-		digitalWrite(LED_1, HIGH);
+		digitalWrite(LED_B, HIGH);
 		vdelay(1000);
-		digitalWrite(LED_2, HIGH);
+		digitalWrite(LED_R, HIGH);
 		vdelay(1000);
-		digitalWrite(LED_1, LOW);
+		digitalWrite(LED_B, LOW);
 		vdelay(1000);
-		digitalWrite(LED_3, HIGH);
+		digitalWrite(LED_G, HIGH);
 		vdelay(1000);
-		digitalWrite(LED_1, HIGH);
+		digitalWrite(LED_B, HIGH);
 		vdelay(1000);
-		digitalWrite(LED_2, LOW);
+		digitalWrite(LED_R, LOW);
 		vdelay(1000);
-		digitalWrite(LED_1, LOW);
+		digitalWrite(LED_B, LOW);
 		vdelay(1000);
-		digitalWrite(LED_3, LOW);
+		digitalWrite(LED_G, LOW);
 	}
 }
 
@@ -210,21 +211,21 @@ void mode_4(void)
 	for (;;)
 	{
 		vdelay(1000);
-		fade_up(LED_1);
+		fade_up(LED_B);
 		vdelay(1000);
-		fade_up(LED_2);
+		fade_up(LED_R);
 		vdelay(1000);
-		fade_down(LED_1);
+		fade_down(LED_B);
 		vdelay(1000);
-		fade_up(LED_3);
+		fade_up(LED_G);
 		vdelay(1000);
-		fade_up(LED_1);
+		fade_up(LED_B);
 		vdelay(1000);
-		fade_down(LED_2);
+		fade_down(LED_R);
 		vdelay(1000);
-		fade_down(LED_1);
+		fade_down(LED_B);
 		vdelay(1000);
-		fade_down(LED_3);
+		fade_down(LED_G);
 	}
 }
 
@@ -232,23 +233,36 @@ void mode_4(void)
 */
 void mode_5(void)
 {
-	fade_up(LED_1);		/* Initial condition */
+	fade_up(LED_B);		/* Initial condition */
 	for (;;)
 	{
 		vdelay(1000);
-		fade_up_down(LED_2, LED_1);
+		fade_up_down(LED_R, LED_B);
 		vdelay(1000);
-		fade_up_down(LED_3, LED_2);
+		fade_up_down(LED_G, LED_R);
 		vdelay(1000);
-		fade_up_down(LED_1, LED_3);
+		fade_up_down(LED_B, LED_G);
 	}
 }
 
-/* mode_6() - placeholder
+/* mode_6() - variable intensity with three independent colour intensities.
+ *
+ * Algorithm:
+ *		- turn on all LEDs whose intensity is not 0.
+ *		- In the loop (every 100 us) turn off the LED whose intensity reaches the loop counter
 */
 void mode_6(void)
 {
-	mode_1();
+	for (;;)
+	{
+		for ( int j = 1; j < 100; j++ )
+		{
+			digitalWrite(LED_B, ( j > level[0] ) ? LOW : HIGH);
+			digitalWrite(LED_R, ( j > level[1] ) ? LOW : HIGH);
+			digitalWrite(LED_G, ( j > level[2] ) ? LOW : HIGH);
+			udelay(100);
+		}
+	}
 }
 
 /* mode_7() - placeholder
@@ -389,6 +403,13 @@ void mode_check(void)
 
 		case BTN_SLOWER:	if ( speed > 0 )	speed--;	break;
 		case BTN_FASTER:	if ( speed < 19 )	speed++;	break;
+
+		case BTN_L1u:		if ( level[0] < 100 )	level[0]++;		break;
+		case BTN_L1d:		if ( level[0] > 0 )		level[0]--;		break;
+		case BTN_L2u:		if ( level[1] < 100 )	level[1]++;		break;
+		case BTN_L2d:		if ( level[1] > 0 )		level[1]--;		break;
+		case BTN_L3u:		if ( level[2] < 100 )	level[2]++;		break;
+		case BTN_L3d:		if ( level[2] > 0 )		level[2]--;		break;
 
 		default:						break;	/* No change */
 		}
