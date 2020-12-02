@@ -30,9 +30,15 @@
 #define LED_G	4
 #define IR_PIN	7
 
+/* Hold-off time before key repeat starts (milliseconds)
+*/
+#define RPT_DELAY	250
+
 char mode =	1;
 char speed = 10;					/* Range 0..19, controlled by INDEX+ and INDEX- buttons */
 char level[3] = { 5, 5, 5 };		/* Range 0..100, controlled by ??? */
+unsigned long lastpress;
+unsigned long lastpresstime;
 
 IRrecv irrecv(IR_PIN);
 
@@ -47,10 +53,10 @@ void mode_2(void);	/* Three-colour cycle (exactly one colour on at any time) */
 void mode_3(void);	/* Eight-colour cycle (all possible combinations of one, two and three colours) */
 void mode_4(void);	/* Eight-colour cycle (like mode_3) but with a gradual change */
 void mode_5(void);	/* Three-colour cycle with a gradual change; while one colour decreases another increases. */
-void mode_6(void);	/* To be defined */
-void mode_7(void);	/* To be defined */
-void mode_8(void);	/* To be defined */
-void mode_9(void);	/* To be defined */
+void mode_6(void);	/* Fully-adjustable single colour */
+void mode_7(void);	/* Red */
+void mode_8(void);	/* Green */
+void mode_9(void);	/* Blue */
 void mode_a(void);	/* To be defined */
 
 void fade_up(int pin);
@@ -248,8 +254,8 @@ void mode_5(void)
 /* mode_6() - variable intensity with three independent colour intensities.
  *
  * Algorithm:
- *		- turn on all LEDs whose intensity is not 0.
- *		- In the loop (every 100 us) turn off the LED whose intensity reaches the loop counter
+ *		- In the loop (every 100 us):
+ *			LEDs whose level is >= j are on, others are off
 */
 void mode_6(void)
 {
@@ -257,33 +263,51 @@ void mode_6(void)
 	{
 		for ( int j = 1; j < 100; j++ )
 		{
-			digitalWrite(LED_B, ( j > level[0] ) ? LOW : HIGH);
-			digitalWrite(LED_R, ( j > level[1] ) ? LOW : HIGH);
-			digitalWrite(LED_G, ( j > level[2] ) ? LOW : HIGH);
+			digitalWrite(LED_B, ( level[0] >= j ) ? HIGH : LOW);
+			digitalWrite(LED_R, ( level[1] >= j ) ? HIGH : LOW);
+			digitalWrite(LED_G, ( level[2] >= j ) ? HIGH : LOW);
 			udelay(100);
 		}
 	}
 }
 
-/* mode_7() - placeholder
+/* mode_7() - red
 */
 void mode_7(void)
 {
-	mode_1();
+	digitalWrite(LED_R, HIGH);
+	digitalWrite(LED_G, LOW);
+	digitalWrite(LED_B, LOW);
+	for (;;)
+	{
+		mode_check();
+	}
 }
 
-/* mode_8() - placeholder
+/* mode_8() - green
 */
 void mode_8(void)
 {
-	mode_1();
+	digitalWrite(LED_R, LOW);
+	digitalWrite(LED_G, HIGH);
+	digitalWrite(LED_B, LOW);
+	for (;;)
+	{
+		mode_check();
+	}
 }
 
-/* mode_9() - placeholder
+/* mode_9() - blue
 */
 void mode_9(void)
 {
-	mode_1();
+	digitalWrite(LED_R, LOW);
+	digitalWrite(LED_G, LOW);
+	digitalWrite(LED_B, HIGH);
+	for (;;)
+	{
+		mode_check();
+	}
 }
 
 /* mode_a() - placeholder
@@ -387,7 +411,22 @@ void mode_check(void)
 
 	while ( irrecv.decode(&results) )
 	{
-		switch ( results.value )
+		unsigned long key = results.value;
+		irrecv.resume();
+		
+		if ( key == IR_REPEAT )
+		{
+			if ( (millis() - lastpresstime) < RPT_DELAY )
+			{
+				continue;
+			}
+		}
+		else
+		{
+			lastpress = key;
+			lastpresstime = millis();
+		}
+		switch ( lastpress )
 		{
 		case BTN_OFF:		newmode = 0;	break;
 		case BTN_M1:		newmode = 1;	break;
@@ -413,7 +452,6 @@ void mode_check(void)
 
 		default:						break;	/* No change */
 		}
-		irrecv.resume();
 	}
 
 	if ( mode != newmode )
