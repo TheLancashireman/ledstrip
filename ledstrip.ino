@@ -21,6 +21,8 @@
 #include "daewoo.h"
 #include <setjmp.h>
 
+extern unsigned long lfsr(unsigned long v, unsigned long tap, unsigned long fb);
+
 #define DBG	0
 
 /* Pin numbers
@@ -40,6 +42,12 @@ char level[3] = { 5, 5, 5 };		/* Range 0..100, controlled by ??? */
 unsigned long lastpress;
 unsigned long lastpresstime;
 
+/* Shift registers for pseudo-random modes
+*/
+unsigned long sr_r = 1;
+unsigned long sr_g = 8;
+unsigned long sr_b = 64;
+
 IRrecv irrecv(IR_PIN);
 
 jmp_buf jb;
@@ -57,7 +65,7 @@ void mode_6(void);	/* Fully-adjustable single colour */
 void mode_7(void);	/* Red */
 void mode_8(void);	/* Green */
 void mode_9(void);	/* Blue */
-void mode_a(void);	/* To be defined */
+void mode_a(void);	/* Pseudo-random on/off */
 
 void fade_up(int pin);
 void fade_down(int pin);
@@ -310,11 +318,20 @@ void mode_9(void)
 	}
 }
 
-/* mode_a() - placeholder
+/* mode_a() - pseudo random sequence on each LED
 */
 void mode_a(void)
 {
-	mode_1();
+	for (;;)
+	{
+		sr_r = lfsr(sr_r, 0x8, 0x20000);	
+		digitalWrite(LED_R, ( ((sr_r & 0x1) == 0) ) ? HIGH : LOW);
+		sr_g = lfsr(sr_g, 0x8, 0x100000);
+		digitalWrite(LED_G, ( ((sr_g & 0x1) == 0) ) ? HIGH : LOW);
+		sr_b = lfsr(sr_b, 0x20, 0x80000);
+		digitalWrite(LED_B, ( ((sr_b & 0x1) == 0) ) ? HIGH : LOW);
+		vdelay(1000);
+	}
 }
 
 /* loop() - standard Arduino "Background Task" ... not used
